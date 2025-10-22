@@ -70,7 +70,7 @@ data "aws_subnets" "default" {
   # You can still use vpc_id directly or as a filter
   filter {
     name   = "vpc-id"
-    values = [aws_vpc.default.id]
+    values = [data.aws_vpc.default.id]
   }
 
   filter {
@@ -133,7 +133,7 @@ resource "aws_autoscaling_group" "ecs_asg" {
   min_size            = 1
   max_size            = 1
   desired_capacity    = 1
-  vpc_zone_identifier = data.aws_subnets_ids.default.ids
+  vpc_zone_identifier = data.aws_subnets.default.ids
 }
 
 resource "aws_ecs_task_definition" "web_task" {
