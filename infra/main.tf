@@ -66,16 +66,25 @@ data "aws_vpc" "default" {
   default = true
 }
 
-/* data "aws_subnet_ids" "default" {
-  vpc_id = data.aws_vpc.default.id
-} */
+data "aws_subnets" "default" {
+  # You can still use vpc_id directly or as a filter
+  filter {
+    name   = "vpc-id"
+    values = [aws_vpc.default.id]
+  }
+
+  filter {
+    name   = "tag:Environment"
+    values = ["production"]
+  }
+}
 
 resource "aws_lb" "alb" {
   name               = "django-alb"
   internal           = false
   load_balancer_type = "application"
   security_groups    = [aws_security_group.alb.id]
-  #subnets            = data.aws_subnet_ids.default.ids
+  subnets            = data.aws_subnet.default.ids
 }
 
 resource "aws_lb_target_group" "tg" {
@@ -121,10 +130,10 @@ resource "aws_autoscaling_group" "ecs_asg" {
     id      = aws_launch_template.ecs_template.id
     version = "$Latest"
   }
-  min_size         = 1
-  max_size         = 1
-  desired_capacity = 1
-  #vpc_zone_identifier = data.aws_subnet_ids.default.ids
+  min_size            = 1
+  max_size            = 1
+  desired_capacity    = 1
+  vpc_zone_identifier = data.aws_subnet_ids.default.ids
 }
 
 resource "aws_ecs_task_definition" "web_task" {
