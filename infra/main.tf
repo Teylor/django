@@ -72,11 +72,6 @@ data "aws_subnets" "default" {
     name   = "vpc-id"
     values = [data.aws_vpc.default.id]
   }
-
-  filter {
-    name   = "tag:Environment"
-    values = ["production"]
-  }
 }
 
 resource "aws_lb" "alb" {
