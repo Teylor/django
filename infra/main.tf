@@ -63,7 +63,7 @@ resource "aws_security_group" "ecs_instance" {
 }
 
 data "aws_vpc" "default" {
-  default = true
+  id = "vpc-08c92f0ef69a2ade4"
 }
 
 data "aws_subnets" "default" {
