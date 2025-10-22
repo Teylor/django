@@ -32,7 +32,7 @@ jobs:
         env:
           ECR_REGISTRY: ${{ steps.ecr_login.outputs.registry }}
         run: |
-          REPO_NAME=django-app-repo
+          REPO_NAME=django
           IMAGE_TAG=latest
           IMAGE_URI=${ECR_REGISTRY}/${REPO_NAME}:${IMAGE_TAG}
           # create repo if not exists
