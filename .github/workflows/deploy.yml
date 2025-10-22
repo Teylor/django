@@ -1,0 +1,57 @@
+name: CI/CD - Build and Deploy to ECS
+
+on:
+    push:
+        branches: [main]
+
+permissions: write-all
+
+jobs:
+    deploy:
+        runs-on: ubuntu-latest
+        steps:
+            - name: Checkout
+              uses: actions/checkout@v4
+
+            - name: Configure AWS credentials
+              uses: aws-actions/configure-aws-credentials@v2
+              with:
+                  aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+                  aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+                  aws-region: ${{ secrets.AWS_REGION }}
+
+            - name: Set up QEMU
+              uses: docker/setup-qemu-action@v2
+
+            - name: Login to Amazon ECR
+              id: ecr_login
+              uses: aws-actions/amazon-ecr-login@v1
+
+            - name: Build, tag, and push image to ECR
+              env:
+                  ECR_REGISTRY: ${{ steps.ecr_login.outputs.registry }}
+              run: |
+                  REPO_NAME=django-app-repo
+                  IMAGE_TAG=latest
+                  IMAGE_URI=${ECR_REGISTRY}/${REPO_NAME}:${IMAGE_TAG}
+                  # create repo if not exists
+                  aws ecr describe-repositories --repository-names $REPO_NAME || aws ecr create-repository --repository-name $REPO_NAME
+                  docker build -t $IMAGE_URI .
+                  docker push $IMAGE_URI
+                  echo "image_uri=$IMAGE_URI" >> $GITHUB_OUTPUT
+
+            - name: Setup Terraform
+              uses: hashicorp/setup-terraform@v2
+              with:
+                  terraform_version: 1.5.6
+
+            - name: Terraform Init
+              working-directory: ./infra
+              run: terraform init
+
+            - name: Terraform Apply
+              working-directory: ./infra
+              env:
+                  TF_VAR_image_uri: ${{ steps.ecr_login.outputs.registry }}/django-app-repo:latest
+              run: |
+                  terraform apply -auto-approve -var="image_uri=${TF_VAR_image_uri}"

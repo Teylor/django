@@ -1,0 +1,14 @@
+__pycache__/
+*.pyc
+env/
+venv/
+.env
+db.sqlite3
+/.terraform/
+terraform.tfstate
+terraform.tfstate.backup
+.terraform.lock.hcl
+.venv/
+dist/
+build/
+.pytest_cache/
